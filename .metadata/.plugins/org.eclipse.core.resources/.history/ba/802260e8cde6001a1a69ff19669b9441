@@ -440,8 +440,7 @@ void SC_init(void)
     scifOsalRegisterTaskAlertCallback(SC_taskAlertHwiCb);
     scifInit(&scifDriverSetup);
 
-    //uint32_t rtcHz = 1; // 1Hz RTC
-    uint32_t rtcHz = 50; // 50Hz RTC
+    uint32_t rtcHz = 1; // 1Hz RTC
     scifStartRtcTicksNow(0x00010000 / rtcHz);
 
     // Configure SC Tasks here, if any
