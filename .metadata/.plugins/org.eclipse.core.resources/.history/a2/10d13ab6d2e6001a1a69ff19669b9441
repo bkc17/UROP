@@ -192,11 +192,9 @@ uint16_t rtc_Hz; //set SCS task interval   // changed from 32 bits to 16, if the
 //For storing ADC parameters used in the ADC API for converting raw value to voltage
 int16_t ADCGain; // changed from 32 bits to 16, if there is an error, change it back
 int16_t ADCOffset; // changed from 32 bits to 16, if there is an error, change it back
-// int n = 0; replaced with sc_count
+int n = 0;
 int p = 0; // used for increasing the transmission interval
 extern int transInterval; // variable to control transmission rate
-int sc_count = 0;
-
 static void SC_processAdc(void){
 
 //    if(PIN_getOutputValue(IOID_0) == 0 && PIN_getOutputValue(IOID_1) == 0){
@@ -212,44 +210,6 @@ static void SC_processAdc(void){
 //           transInterval = 4;
 //    }
 
-    if(sc_count < 5){
-        PIN_setOutputValue(ledPINHandle, IOID_4, 1);
-                   //frequency
-                time_high = scifTaskData.compHandle.output.TimeOutHigh;
-                time_low = scifTaskData.compHandle.output.TimeOutLow;
-                time_tot = (time_high << 16) + time_low; //Merge high and low words
-
-                // waiting
-                Task_sleep(20000/Clock_tickPeriod);
-
-
-                PIN_setOutputValue(ledPINHandle, IOID_4, 0);
-                //Convert to frequency
-                frequency = 24000000/time_tot ; //Time_tot is time for half a cycle, see sensor controller code
-
-                //float frequencyarray[n] = frequency;
-
-               OmegaArray[sc_count] = frequency*22/56;
-
-               //over speed condition and VDD > Vstor_os_hyst
-                if (OmegaArray[sc_count] >= 500 && VDDstatus> 3200   ){
-
-                    PIN_setOutputValue(ledPINHandle, IOID_12, 1);
-
-                }
-                // over speed condition but VDD <= Vstor_os
-                else if (OmegaArray[sc_count] >= 500 && VDDstatus<=3000){
-                    PIN_setOutputValue(ledPINHandle, IOID_12, 0);
-                }else{
-                    PIN_setOutputValue(ledPINHandle, IOID_12, 0);
-                }
-            }
-
-            PIN_setOutputValue(ledPINHandle, IOID_11, 0);
-
-    }
-
-    if(sc_count == 50){
 
         if(p < transInterval){
             p++; // keep increasing until it equals transInterval
@@ -257,8 +217,6 @@ static void SC_processAdc(void){
 
 
         if(p == transInterval){
-
-
 
 
             // enable battery monitor enable
@@ -314,7 +272,7 @@ static void SC_processAdc(void){
                    System_printf ("temp %u. \n",TEMP_Vout);
                    System_flush();
 
-/*
+
            for (n=0; n<=4; n++)   {
                // PIN_setOutputValue(ledPINHandle, IOID_3, 1);
 
@@ -355,10 +313,10 @@ static void SC_processAdc(void){
                 }
             }
 
-               PIN_setOutputValue(ledPINHandle, IOID_11, 0);
+                    PIN_setOutputValue(ledPINHandle, IOID_11, 0);
 
 
-*/
+
                // OmegaAve = (OmegaArray[0]+OmegaArray[1]+OmegaArray[2]+OmegaArray[3]+ OmegaArray[4])/5;
 
 
@@ -420,11 +378,6 @@ static void SC_processAdc(void){
 
         }
 
-        sc_count = 0; //resetting the "counter"
-
-    } // end of if(sc_count == 50) which means 1 second has passed if clock frequency in sc_init is 50 Hz
-
-    sc_count++;
 
 }
  // SC_processAdc
