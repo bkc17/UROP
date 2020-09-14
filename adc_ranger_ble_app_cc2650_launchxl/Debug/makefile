@@ -174,7 +174,7 @@ all: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 	@$(MAKE) --no-print-directory -Onone "adc_ranger_ble_app_cc2650_launchxl.out"
 
 dependents:
-	-cd C:/Users/bhara/workspace_v8/project_zero_stack_cc2650/Debug && $(MAKE) all
+	-cd C:/Users/bhara/workspace_v8/project_zero_stack_cc2650/Debug && $(MAKE) clean all
 
 # Tool invocations
 adc_ranger_ble_app_cc2650_launchxl.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS) C:/Users/bhara/workspace_v8/project_zero_stack_cc2650/Debug/project_zero_stack_cc2650.out

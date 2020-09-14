@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="energyHarvester" version="2.6.0.132">
+<project name="energyHarvester" version="2.7.0.155">
     <desc><![CDATA[Comparator and timer operation for calculating turbine frequency]]></desc>
     <pattr name="Apply default power mode">0</pattr>
     <pattr name="Board">CC2650 LaunchPad</pattr>
@@ -10,15 +10,18 @@
     <pattr name="Code prefix"></pattr>
     <pattr name="Default power mode">0</pattr>
     <pattr name="Operating system">TI-RTOS</pattr>
-    <pattr name="Output directory">C:/Users/ZhangChe/workspace_v8/energy_harvester_ble_app_cc2650_5XD/Scif</pattr>
+    <pattr name="Output directory">C:/Users/bhara/workspace_v8/energy_harvester_ble_app_cc2650_5XD/Scif</pattr>
     <pattr name="RTC tick interval (16.16 format)">2000</pattr>
     <pattr name="Run-time logging UART RX pin"></pattr>
     <pattr name="Run-time logging UART TX pin"></pattr>
     <task name="compHandle">
         <desc><![CDATA[]]></desc>
-        <tattr name="output.ADCout" type="expr" content="struct" scope="task" min="0" max="65535">0</tattr>
+        <tattr name="ARRAY_SIZE" type="expr" content="const" scope="task" min="0" max="65535">5</tattr>
+        <tattr name="output.ADCout" type="expr" content="struct" scope="task" min="-32768" max="32767">0</tattr>
         <tattr name="output.TimeOutHigh" desc="High bits for timer output" type="expr" content="struct" scope="task" min="0" max="65535">0</tattr>
+        <tattr name="output.TimeOutHighArray" size="ARRAY_SIZE" type="expr" content="struct_array" scope="task" min="0" max="65535">0</tattr>
         <tattr name="output.TimeOutLow" desc="Pulse width for 10 pulses" type="expr" content="struct" scope="task" min="0" max="65535">0</tattr>
+        <tattr name="output.TimeOutLowArray" size="ARRAY_SIZE" type="expr" content="struct_array" scope="task" min="0" max="65535">0</tattr>
         <tattr name="state.compOut" desc="Output of cont.time comparator" type="expr" content="struct" scope="task" min="0" max="65535">0</tattr>
         <resource_ref name="ADC" enabled="1"/>
         <resource_ref name="AON Domain Functionality" enabled="0"/>
@@ -210,6 +213,7 @@
         <sccode name="event2" init_power_mode="0"><![CDATA[]]></sccode>
         <sccode name="event3" init_power_mode="0"><![CDATA[]]></sccode>
         <sccode name="execute" init_power_mode="0"><![CDATA[fwAcquirePeripheral(PERIPHERAL_ADC);
+
 // Set Temp_VDD high
 gpioSetOutput(AUXIO_O_TEMP_VDD);
 
@@ -221,53 +225,61 @@ adcSelectGpioInput(AUXIO_A_TEMP_VOUT);
 // Enable the ADC, 4.3v fixed ref and 2.73ms sample period
 adcEnableSync(ADC_REF_FIXED, ADC_SAMPLE_TIME_2P73_MS, ADC_TRIGGER_MANUAL);
 
-
 adcGenManualTrigger(); //trigger ADC
+
 adcReadFifo(output.ADCout); //Load value into output variable
+
 adcDisable(); //Turn off ADC to save power
+
 fwReleasePeripheral(PERIPHERAL_ADC);
+
 gpioClearOutput(AUXIO_O_TEMP_VDD);
 
-
-//Select 24 MHz from RCOSC_HF as TDC counter clock source
-tdcSetCntSource(TDC_CNTSRC_48M_RCOSC);
+//Select 48 MHz from RCOSC_HF as TDC counter clock source
+tdcSetCntSource(TDC_CNTSRC_96M_RCOSC);
 
 //Enable COMPA
 compaEnable();
 
 //Select COMPA reference and input
 compaSelectGpioRef(AUXIO_A_COMP1);
+
 compaSelectGpioInput(AUXIO_A_COMP2);
 
 fwAcquirePeripheral(PERIPHERAL_TDC);
 
 //Enable TDC, start with trigger on first rising edge, and stop on first subsequent falling edge
 tdcSetTriggers(TDC_STARTTRIG_COMPA_HIGH,TDC_STOPTRIG_COMPA_LOW,0);
+
 tdcEnable();
 
-//Enable to the measurement to start synchoronously at first start trigger
-tdcArm(TDC_START_SYNC);
+for(U16 n = 0; n < 5; n++){
 
-//wait for TDC to stop triggering for 100ms
-//tdcWaitUs(100000);
+    //Enable to the measurement to start synchoronously at first start trigger
+    tdcArm(TDC_START_SYNC);
 
-//Check that TDC has finished and not TIme out
-tdcCheckDoneEv(state.compOut);
+    //wait for TDC to stop triggering for 100ms
+    tdcWaitUs(10000);
 
-if(state.compOut == 1){
-    tdcGetValue(output.TimeOutHigh,output.TimeOutLow);
+    //Check that TDC has finished and not TIme out
+    //tdcCheckDoneEv(state.compOut);
+    //if(state.compOut == 1){
+    tdcGetValue(output.TimeOutHighArray[n],output.TimeOutLowArray[n]);
+    //}
+
 }
 
 tdcDisable();
-fwReleasePeripheral(PERIPHERAL_TDC);
-compaDisable();
 
+fwReleasePeripheral(PERIPHERAL_TDC);
+
+compaDisable();
 fwGenAlertInterrupt();
 fwScheduleTask(1);]]></sccode>
         <sccode name="initialize" init_power_mode="0"><![CDATA[fwScheduleTask(1);]]></sccode>
         <sccode name="terminate" init_power_mode="0"><![CDATA[//Could move task alert to here?]]></sccode>
         <event_trigger active_count="1">0,1,2,3</event_trigger>
-        <tt_iter>while_noalertgen_start,run_execute,while_noalertgen_end</tt_iter>
+        <tt_iter>run_execute</tt_iter>
         <tt_struct>output.ADCout,output.TimeOutHigh,output.TimeOutLow,state.compOut</tt_struct>
         <rtl_struct></rtl_struct>
         <rtl_task_sel en="1" struct_log_list="output"/>
