@@ -259,7 +259,7 @@ for(U16 n = 0; n < 5; n++){
     tdcArm(TDC_START_SYNC);
 
     //wait for TDC to stop triggering for 100ms
-    tdcWaitUs(10000);
+    tdcWaitUs(100000);
 
     //Check that TDC has finished and not TIme out
     //tdcCheckDoneEv(state.compOut);
