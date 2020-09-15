@@ -73,7 +73,7 @@ char voltageArray[10];
 int16_t OmegaArray[5]; // changed from 32 bits to 16, if there is an error, change it back
 uint32_t OmegaAve = 0; // changed from 32 bits to 16, if there is an error, change it back
 char OmegaAveArray[4];
-int Grad; // changed from 32 bits to 16, if there is an error, change it back //changed it from int_16t to int
+int Grad; // changed from 32 bits to 16, if there is an error, change it back
 char GradArray[4];
 char GradArray2[4];
 int16_t frequency; // changed from 32 bits to 16, if there is an error, change it back
@@ -372,20 +372,19 @@ static void SC_processAdc(void) {
 		ADC_SERVICE_SERV_UUID,
 		ADC_SERVICE_FREQ, (uint8_t *) OmegaAveArray, strlen(OmegaAveArray));
 
-		Grad = (-4 * OmegaArray[0] - 2 * OmegaArray[1] + 2 * OmegaArray[3]
-				+ 4 * OmegaArray[4]) / 2;
+		Grad = (-4 * OmegaArray[0] - 2 * OmegaArray[1] + 2 * OmegaArray[3] + 4 * OmegaArray[4]) / 2;
 
 		if (Grad >= 0 && Grad < 10) {
-			itoaAppendStr(GradArray, Grad, "   ");
+			itoaAppendStr(GradArray2, Grad, "   ");
 		}
 		else if (Grad >= 10 && Grad < 100) {
-			itoaAppendStr(GradArray, Grad, "  ");
+			itoaAppendStr(GradArray2, Grad, "  ");
 		}
 		else if (Grad >= 100 && Grad < 1000) {
-			itoaAppendStr(GradArray, Grad, " ");
+			itoaAppendStr(GradArray2, Grad, " ");
 		}
 		else if (Grad >= 1000) {
-			itoaAppendStr(GradArray, Grad, "");
+			itoaAppendStr(GradArray2, Grad, "");
 		}
 		else if (Grad < 0 && Grad > -10) {
 			Grad = Grad * (-1);
@@ -421,6 +420,7 @@ static void SC_processAdc(void) {
 		user_enqueueCharDataMsg(APP_MSG_UPDATE_CHARVAL, 0,
 		ADC_SERVICE_SERV_UUID,
 		ADC_SERVICE_GRADIENT, (uint8_t *) GradArray2, strlen(GradArray2));
+
 
 		p = 0; // reset p because we want it to process data every "transInterval" seconds
 
